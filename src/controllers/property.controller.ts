@@ -59,17 +59,23 @@ export const getAvailableProperties = async (req: Request, res: Response) => {
     const { checkIn, checkOut } = req.query;
 
     if (!checkIn || !checkOut) {
-      return res.status(400).json({ error: "Check-in and check-out dates are required" });
+      res.status(400).json({ error: "Check-in and check-out timestamps are required" });
+      return;
     }
 
-    const checkInDate = new Date(checkIn as string);
-    const checkOutDate = new Date(checkOut as string);
+    const checkInDateTime = new Date(checkIn as string);
+    const checkOutDateTime = new Date(checkOut as string);
 
-    // Find properties that have overlapping bookings
+    // Find booked properties that have overlapping datetime bookings
     const bookedProperties = await prisma.booking.findMany({
       where: {
         OR: [
-          { checkIn: { lte: checkOutDate }, checkOut: { gte: checkInDate } }, // Overlapping booking
+          {
+            AND: [
+              { checkIn: { lte: checkOutDateTime } }, // Booking starts before requested checkout
+              { checkOut: { gte: checkInDateTime } }, // Booking ends after requested check-in
+            ],
+          },
         ],
       },
       select: { propertyId: true },
@@ -77,10 +83,10 @@ export const getAvailableProperties = async (req: Request, res: Response) => {
 
     const bookedPropertyIds = bookedProperties.map((booking) => booking.propertyId);
 
-    // Find properties that are NOT booked
+    // Get available properties (not in the booked list)
     const availableProperties = await prisma.property.findMany({
       where: {
-        id: { notIn: bookedPropertyIds }, // Exclude booked properties
+        id: { notIn: bookedPropertyIds },
       },
     });
 
