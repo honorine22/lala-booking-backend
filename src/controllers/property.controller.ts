@@ -41,6 +41,23 @@ export const updateProperty = async (req: Request, res: Response) => {
   }
 };
 
+// Get a property by ID
+export const getProperty = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const property = await prisma.property.findUnique({ where: { id } });
+
+    if (!property) {
+      res.status(404).json({ error: "Property not found" });
+      return;
+    }
+
+    res.json(property);
+  } catch (error) {
+    res.status(500).json({ error: "Error fetching property", message: (error as any).message });
+  }
+};
+
 export const deleteProperty = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
