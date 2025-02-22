@@ -31,7 +31,7 @@ export const createBooking = async (req: Request, res: Response) => {
 
         // If an overlapping booking is found, reject the new booking
         if (overlappingBooking) {
-            res.status(400).json({ error: "This property is already booked within the selected dates. Choose a different time." });
+            res.status(400).json({ error: "This property is already booked within the selected dates." });
             return;
         }
 
