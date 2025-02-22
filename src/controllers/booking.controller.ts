@@ -88,10 +88,20 @@ export const updateBookingStatus = async (req: Request, res: Response) => {
     }
 };
 
-// Get bookings
+// Get bookings with property details
 export const getBookings = async (req: Request, res: Response) => {
-    const bookings = await prisma.booking.findMany();
-    res.json(bookings);
+    try {
+        const bookings = await prisma.booking.findMany({
+            include: {
+                property: true, // Fetch related property details
+            },
+        });
+
+        res.json(bookings);
+    } catch (error) {
+        console.error("Error fetching bookings:", error);
+        res.status(500).json({ error: "Failed to fetch bookings." });
+    }
 };
 
 // Delete booking
