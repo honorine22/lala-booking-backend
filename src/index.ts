@@ -6,14 +6,21 @@ import authRoutes from "./routes/auth.routes";
 import propertyRoutes from "./routes/property.routes";
 import bookingRoutes from "./routes/booking.routes";
 import prisma from "./utils/prismaClient";
+import userRoutes from "./routes/user.routes";
 
 dotenv.config();
 const app = express();
 
+app.use(cors({
+    origin: 'http://localhost:3000',
+    credentials: true
+}));
+
+
 app.use(cors());
 app.use(express.json());
-
 app.use("/api/auth", authRoutes);
+app.use('/api/users', userRoutes);
 app.use("/api/properties", propertyRoutes);
 app.use("/api/bookings", bookingRoutes);
 

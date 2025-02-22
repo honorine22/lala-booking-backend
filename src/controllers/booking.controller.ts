@@ -89,21 +89,81 @@ export const updateBookingStatus = async (req: Request, res: Response) => {
 };
 
 // Get bookings with property details
+// Get bookings with search and pagination
 export const getBookings = async (req: Request, res: Response) => {
     try {
+        const { search = "", page = "1", pageSize = "10" } = req.query;
+
+        const currentPage = Number(page);
+        const limit = Number(pageSize);
+        const skip = (currentPage - 1) * limit;
+
+        // Query bookings with optional search and pagination
         const bookings = await prisma.booking.findMany({
+            where: {
+                OR: [
+                    {
+                        renter: {
+                            name: {
+                                contains: search as string,
+                                mode: "insensitive",
+                            },
+                        },
+                    },
+                    {
+                        property: {
+                            title: {
+                                contains: search as string,
+                                mode: "insensitive",
+                            },
+                        },
+                    },
+                ],
+            },
             include: {
-                property: true, // Fetch related property details
+                property: true,
+            },
+            skip,
+            take: limit,
+        });
+
+        // Get total count for pagination
+        const totalCount = await prisma.booking.count({
+            where: {
+                OR: [
+                    {
+                        renter: {
+                            name: {
+                                contains: search as string,
+                                mode: "insensitive",
+                            },
+                        },
+                    },
+                    {
+                        property: {
+                            title: {
+                                contains: search as string,
+                                mode: "insensitive",
+                            },
+                        },
+                    },
+                ],
             },
         });
 
-        res.json(bookings);
+        res.json({
+            data: bookings,
+            pagination: {
+                currentPage,
+                totalPages: Math.ceil(totalCount / limit),
+                totalCount,
+            },
+        });
     } catch (error) {
         console.error("Error fetching bookings:", error);
         res.status(500).json({ error: "Failed to fetch bookings." });
     }
 };
-
 // Delete booking
 export const deleteBooking = async (req: Request, res: Response) => {
     try {

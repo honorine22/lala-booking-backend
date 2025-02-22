@@ -5,7 +5,7 @@ import { confirmBooking, createBooking, deleteBooking, getBookings, updateBookin
 const bookingRouter = express.Router();
 
 bookingRouter.post("/", authMiddleware, createBooking);
-bookingRouter.put("/:id/status", authMiddleware, updateBookingStatus);
+bookingRouter.put("/:id", authMiddleware, updateBookingStatus);
 // COnfirm booking route
 bookingRouter.patch("/:id/confirm", authMiddleware, confirmBooking);
 bookingRouter.delete("/:id", authMiddleware, deleteBooking);

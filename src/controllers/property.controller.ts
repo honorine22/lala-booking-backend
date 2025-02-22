@@ -19,10 +19,49 @@ export const createProperty = async (req: Request, res: Response) => {
   }
 };
 
-export const getProperties = async (_req: Request, res: Response) => {
-  const properties = await prisma.property.findMany();
-  res.json(properties);
+export const getProperties = async (req: Request, res: Response) => {
+  try {
+    const { search = '', page = '1', pageSize = '10' } = req.query;
+
+    const pageNumber = parseInt(page as string, 10);
+    const size = parseInt(pageSize as string, 10);
+    const skip = (pageNumber - 1) * size;
+
+    const whereClause = {
+      OR: [
+        { title: { contains: search as string, mode: 'insensitive' as const } },
+        { location: { contains: search as string, mode: 'insensitive' as const } },
+      ],
+    };
+
+    const properties = await prisma.property.findMany({
+      where: search ? whereClause : {},
+      include: {
+        host: true,
+      },
+      skip,
+      take: size,
+    });
+
+    const totalCount = await prisma.property.count({
+      where: search ? whereClause : {},
+    });
+
+    res.json({
+      data: properties,
+      pagination: {
+        totalItems: totalCount,
+        totalPages: Math.ceil(totalCount / size),
+        currentPage: pageNumber,
+        pageSize: size,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching properties:', error);
+    res.status(500).json({ error: 'Failed to fetch properties' });
+  }
 };
+
 
 export const updateProperty = async (req: Request, res: Response) => {
   try {
